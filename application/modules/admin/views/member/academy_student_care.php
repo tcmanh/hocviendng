@@ -87,7 +87,6 @@
                                         </tbody>
                                     </table>
                                 </div>
-
                                 <div id="p1"></div>
                             </div>
                         </div>
@@ -144,11 +143,44 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <strong>
-                                        Địa chỉ:
+                                        Khu vực:
                                     </strong>
-                                    <input type="text" class="form-control" ng-model="current_student.address">
+                                    <select class="form-control" ng-model="current_student.area" name="area" />
+                                    <option value="HCM">Hồ Chí Minh</option>
+                                    <option value="DN">Đà Nẵng</option>
+                                    <option value="CT">Cần Thơ</option>
+                                    </select>
                                 </div>
                             </div>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <strong>
+                                                Địa chỉ:
+                                            </strong>
+                                            <input type="text" class="form-control" ng-model="current_student.address">
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-md-6">
+                                        <strong>
+                                            Giới tính:
+                                        </strong>
+                                        <div>
+                                            <label>
+                                                <input type="radio" name="gender" checked="checked" value="1" /> Nữ
+                                            </label>
+                                            <label>
+                                                <input type="radio" name="gender" /> Nam
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
                             <div class="col-md-12">
                                 <div class="row">
                                     <div class="col-md-6">
@@ -157,6 +189,19 @@
                                                 Số chứng minh:
                                             </strong>
                                             <input type="text" class="form-control" ng-model="current_student.identity_number">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <strong>
+                                                Ngày cấp:
+                                            </strong>
+                                            <div class="input-group">
+                                                <div class="input-group-addon">
+                                                    <i class="fa fa-calendar"></i>
+                                                </div>
+                                                <input type="text" class="form-control datepicker" ng-model="current_student.id_date">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -517,7 +562,8 @@
                 $scope.list_key = [];
             }
             $scope.changeCare = () => {
-                $http.get(base_url + 'admin/member/ajax_get_care_tag?filter=' + JSON.stringify($scope.care.name_care)).then(r => {
+                $http.get(base_url + 'admin/member/ajax_get_care_tag?filter=' + JSON.stringify($scope.care
+                    .name_care)).then(r => {
                     if (r && r.data.status == 1) {
                         $scope.list_key = r.data.data;
                     } else toastr["error"]("Đã có lỗi xẩy ra!");
@@ -536,14 +582,15 @@
 
             $scope.saveStudentCare = () => {
                 $scope.care.student_id = $scope.current_student.id;
-                $http.post(base_url + 'admin/member/ajax_save_student_care', JSON.stringify($scope.care)).then(r => {
-                    if (r && r.data.status == 1) {
-                        toastr["success"]("Tạo thành công!");
-                        $scope.getStudentCare($scope.care.student_id);
-                        $scope.getDataStudent();
-                        $scope.care = {};
-                    } else toastr["error"]("Đã có lỗi xẩy ra!");
-                });
+                $http.post(base_url + 'admin/member/ajax_save_student_care', JSON.stringify($scope.care)).then(
+                    r => {
+                        if (r && r.data.status == 1) {
+                            toastr["success"]("Tạo thành công!");
+                            $scope.getStudentCare($scope.care.student_id);
+                            $scope.getDataStudent();
+                            $scope.care = {};
+                        } else toastr["error"]("Đã có lỗi xẩy ra!");
+                    });
             }
 
 
@@ -584,26 +631,30 @@
 
             $scope.getStudentCare = (id) => {
                 $scope.filter1.id = id;
-                $http.get(base_url + 'admin/member/ajax_get_student_care?filter=' + JSON.stringify($scope.filter1)).then(r => {
-                    if (r && r.data.status == 1) {
+                $http.get(base_url + 'admin/member/ajax_get_student_care?filter=' + JSON.stringify($scope.filter1))
+                    .then(r => {
+                        console.log(r);
 
-                        $scope.care_data = r.data.data;
-                        $scope.p1.total = parseInt(r.data.count);
-                        $scope.p1.totalPage = Math.ceil(r.data.count / $scope.p1.itemsPerPage);
-                    } else toastr["error"]("Đã có lỗi xẩy ra!");
-                });
+                        if (r && r.data.status == 1) {
+
+                            $scope.care_data = r.data.data;
+                            $scope.p1.total = parseInt(r.data.count);
+                            $scope.p1.totalPage = Math.ceil(r.data.count / $scope.p1.itemsPerPage);
+                        } else toastr["error"]("Đã có lỗi xẩy ra!");
+                    });
             }
 
             $scope.addStudent = () => {
-                $http.post(base_url + 'admin/member/ajax_save_academy_student', JSON.stringify($scope.student)).then(r => {
-                    if (r && r.data.status == 1) {
-                        $scope.getDataStudent();
-                        $scope.student = {};
-                        toastr["success"]("Tạo thành công!");
-                    } else if (r && r.data.status == 0) {
-                        toastr["error"]("Số điện thoại đã tồn tại!");
-                    } else toastr["error"]("Đã có lỗi xẩy ra!");
-                });
+                $http.post(base_url + 'admin/member/ajax_save_academy_student', JSON.stringify($scope.student))
+                    .then(r => {
+                        if (r && r.data.status == 1) {
+                            $scope.getDataStudent();
+                            $scope.student = {};
+                            toastr["success"]("Tạo thành công!");
+                        } else if (r && r.data.status == 0) {
+                            toastr["error"]("Số điện thoại đã tồn tại!");
+                        } else toastr["error"]("Đã có lỗi xẩy ra!");
+                    });
             }
             $scope.saveStudent = () => {
                 $scope.student = $scope.current_student;
@@ -617,7 +668,8 @@
 
             $scope.getDataStudent = (is_registed) => {
                 $scope.filter.is_registed = is_registed;
-                $http.get(base_url + 'admin/member/ajax_get_academy_student?filter=' + JSON.stringify($scope.filter)).then(r => {
+                $http.get(base_url + 'admin/member/ajax_get_academy_student?filter=' + JSON.stringify($scope
+                    .filter)).then(r => {
                     if (r && r.data.status == 1) {
                         $scope.ajax_data = r.data.data;
                         $scope.p.total = parseInt(r.data.count);
@@ -641,11 +693,14 @@
                             endDate: moment(),
                             ranges: {
                                 'Hôm nay': [moment(), moment()],
-                                'Hôm qua': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                                'Hôm qua': [moment().subtract(1, 'days'), moment().subtract(1,
+                                    'days')],
                                 '7 ngày trước': [moment().subtract(6, 'days'), moment()],
                                 '30 ngày trước': [moment().subtract(29, 'days'), moment()],
                                 'Tháng này': [moment().startOf('month'), moment().endOf('month')],
-                                'Tháng trước': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                                'Tháng trước': [moment().subtract(1, 'month').startOf('month'),
+                                    moment().subtract(1, 'month').endOf('month')
+                                ]
                             }
                         });
                     }, 100);

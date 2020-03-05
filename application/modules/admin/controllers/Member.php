@@ -415,8 +415,7 @@ class Member extends Admin_Controller
 
 	public function academy_student_care()
 	{
-		$this->mPageTitle = 'Chăm sóc học viên';
-
+		$this->mTitle = 'Chăm sóc học viên chưa đăng ký';
 		$this->render('admin/member/academy_student_care');
 	}
 
@@ -491,20 +490,23 @@ class Member extends Admin_Controller
 	{
 		$filter = (object) json_decode($this->input->get('filter'));
 
-		$this->db->select('DATE_FORMAT(asc.created,"%d-%m-%Y %h:%i") as created,ast.name as name_care,concat(au.last_name," ",au.first_name) as import_name')
+		$this->db->select('DATE_FORMAT(asc.created,"%d-%m-%Y %h:%i") as created,ast.name as name_care,asc.import_id')
 			->from('academy_student_care as  asc')
 			->join('academy_care_tag as ast', 'asc.care_id=ast.id')
-			->join('admin_users as au', 'au.id=asc.import_id')
 			->where('asc.student_id', $filter->id);
+
 		if (!empty($filter->limit)) $this->db->limit($filter->limit, $filter->offset);
 		$this->db->order_by('asc.id', 'desc');
 		$rs = $this->db->get()->result();
 		$qr = $this->db->last_query();
+		foreach ($rs as $key => $value) {
+			$user =	get_user($value->import_id);
 
+			$value->import_name = $user->last_name . ' ' . $user->first_name;
+		}
 		$count = $this->db->select('count(*) as total')
 			->from('academy_student_care as  asc')
 			->join('academy_care_tag as ast', 'asc.care_id=ast.id')
-			->join('admin_users as au', 'au.id=asc.import_id')
 			->where('asc.student_id', $filter->id)->get()->row();
 
 		echo json_encode(array('status' => 1, 'count' => $count->total, 'data' => $rs, $qr));
