@@ -1,8 +1,15 @@
 <link href="../assets/plugins/checkbox/icheck-material.min.css" rel="stylesheet" type="text/css">
+<link href="../assets/plugins/toastr-master/build/toastr.min.css" rel="stylesheet" type="text/css">
+<link href="../assets/plugins/timepicker/bootstrap-timepicker.css" rel="stylesheet" type="text/css">
+
 <script src="../assets/plugins/angularjs/angularjs.min.js"></script>
 <script src="../assets/plugins/lodash/lodash.js"></script>
+<script src="../assets/plugins/toastr-master/build/toastr.min.js"></script>
+<script src="../assets/plugins/timepicker/bootstrap-timepicker.min.js"></script>
+
 
 <div ng-app="app" ng-controller="date_off" ng-init="init()">
+
     <div class="modal fade" id="care" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -30,13 +37,49 @@
                                         <strong>
                                             Tag:
                                         </strong>
-                                        <div tabindex="-1" class="input-dropdown">
+                                        <div class="flex flex-bt">
+                                            <div style="width: 80%">
+                                                <select name="" class="form-control" id="" ng-model="care.name_care">
+                                                    <option ng-repeat="(index,value) in list_key" value="{{value.name}}">{{value.name}}</option>
+                                                </select>
+                                            </div>
+                                            <div style="width: 20%" class="text-right">
+                                                <div class="btn btn-success">
+                                                    <i class="fa fa-plus"></i>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        <!-- <div tabindex="-1" class="input-dropdown">
                                             <input type="text" class="form-control" ng-blur="clickOutSide()" ng-model="care.name_care" ng-change="changeCare()" ng-focus="changeCare()">
                                             <ul id="myUL">
-                                                <li class="cursor" ng-repeat="(index,value) in list_key" ng-mousedown="clickKey(value.name)">
+                                                <li class="cursor" ng-repeat="(index,value) in list_key" ng-mousedown="clickKey(value.name,value.id)">
                                                     <a>{{value.name}}</a>
                                                 </li>
                                             </ul>
+                                        </div> -->
+                                    </div>
+                                    <div class="form-group" ng-class="{'hidden':care.name_care!='Chốt lịch hẹn'}">
+                                        <strong>
+                                            Ngày hẹn:
+                                        </strong>
+                                        <div class="input-group ">
+                                            <div class="input-group-addon">
+                                                <i class="fa fa-calendar"></i>
+                                            </div>
+                                            <input class="form-control datepicker" ng-model="care.date" name="date_start" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="form-group" ng-class="{'hidden':care.name_care!='Chốt lịch hẹn'}">
+                                        <strong>
+                                            Giờ:
+                                        </strong>
+                                        <div class="input-group bootstrap-timepicker">
+                                            <div class="input-group-addon">
+                                                <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                            </div>
+                                            <input type="text" class="form-control timepicker" ng-model="care.time" name="time" value="">
                                         </div>
                                     </div>
                                     <div class="form-group text-right">
@@ -79,15 +122,93 @@
                                                 <td>
                                                     {{value.name_care }}
                                                 </td>
-                                                <td>
-
+                                                <td class="text-center">
+                                                    <div class="label label-danger" ng-click="deleteCare(value)">
+                                                        <i class="fa fa-trash-o" aria-hidden="true"></i>
+                                                    </div>
                                                 </td>
-
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
                                 <div id="p1"></div>
+                            </div>
+                            <div class="wrap-appoinment">
+                                <h4 class="title" style="padding-bottom: 0">
+                                    Lịch sử hẹn
+                                </h4>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" style="padding-top: 30px">
+                                        <thead style="background: white">
+                                            <tr>
+                                                <th class="text-center">
+                                                    Ngày hẹn
+                                                </th>
+                                                <th class="text-center">Nhân viên chăm sóc</th>
+                                                <th class="text-center">
+                                                    Tình trạng
+                                                </th>
+                                                <th class="text-center">
+                                                    Thao tác
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style="background: white">
+                                            <tr ng-repeat="(index,value) in app_data">
+                                                <td class="text-center">
+                                                    {{value.arrival_time}}
+                                                </td>
+                                                <td>
+                                                    {{value.import_name}}
+                                                </td>
+                                                <td class="text-center">
+                                                    <span ng-if="value.arrival_status==0" style="width: 70px;display: inline-block" class="label label-warning text-center"> Chưa tới </span>
+                                                    <span ng-if="value.arrival_status==1" style="width: 70px;display: inline-block" class="label label-success text-center"> Đã tới </span>
+                                                    <span ng-if="value.arrival_status==-1" style="width: 70px;display: inline-block" class="label label-danger text-center">Không tới </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <!-- <div class="label label-danger" ng-click="deleteCare(value)">
+                                                        <i class="fa fa-trash-o" aria-hidden="true"></i>
+                                                    </div> -->
+                                                    <div class="excute">
+                                                        <div class="dropdown" style="display: inline-block">
+                                                            <span style="width:100px;cursor: pointer;padding: 5px 8px;border:1px solid rgb(20, 20, 148);border-radius: 5px;color:rgb(20, 20, 148)" data-toggle="dropdown">
+                                                                Thao tác <i class="fa fa-caret-down" aria-hidden="true"></i>
+                                                            </span>
+                                                            <ul class="dropdown-menu" style="    left: unset;right: 100%; top: 50%;transform: translateY(-50%)">
+                                                                <li ng-if="value.arrival_status==0">
+                                                                    <a class="cursor" ng-click="changeStatusApp(value,1)">
+                                                                        <i class="fa fa-check text-success" aria-hidden="true"></i>
+                                                                        Xác nhận khách tới
+                                                                    </a>
+                                                                </li>
+                                                                <li ng-if="value.arrival_status==0">
+                                                                    <a class="cursor" ng-click="changeStatusApp(value,-1)">
+                                                                        <i class="fa fa-ban text-warning" aria-hidden="true"></i>
+                                                                        Xác nhận khách không tới
+                                                                    </a>
+                                                                </li>
+                                                                <li ng-if="value.arrival_status!=0">
+                                                                    <a class="cursor" ng-click="changeStatusApp(value,0)">
+                                                                        <i class="fa fa-undo text-warning" aria-hidden="true"></i>
+                                                                        Hoàn tác
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="cursor" ng-click="deleteCare(value)">
+                                                                        <i class="fa fa-trash-o text-danger" aria-hidden="true"></i>
+                                                                        Xóa
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="p2"></div>
                             </div>
                         </div>
                     </div>
@@ -116,7 +237,7 @@
                                     <strong>
                                         Số điện thoại:
                                     </strong>
-                                    <input type="text" class="form-control" ng-model="current_student.phone">
+                                    <input type="text" onkeyup="this.value=this.value.replace(/[^\d]/,'').replace(/\D/g,'')" class="form-control" ng-model="current_student.phone">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -169,11 +290,11 @@
                                             Giới tính:
                                         </strong>
                                         <div>
-                                            <label>
-                                                <input type="radio" name="gender" checked="checked" value="1" /> Nữ
+                                            <label style="margin-right: 20px">
+                                                <input type="radio" name="gender" ng-checked="current_student.gender" ng-model="current_student.gender" value="1" /> Nữ
                                             </label>
                                             <label>
-                                                <input type="radio" name="gender" /> Nam
+                                                <input type="radio" name="gender" ng-checked="current_student.gender" ng-model="current_student.gender" value="0" /> Nam
                                             </label>
                                         </div>
                                     </div>
@@ -188,7 +309,7 @@
                                             <strong>
                                                 Số chứng minh:
                                             </strong>
-                                            <input type="text" class="form-control" ng-model="current_student.identity_number">
+                                            <input type="text" onkeyup="this.value=this.value.replace(/[^\d]/,'').replace(/\D/g,'')" class="form-control" ng-model="current_student.identity_number">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -206,17 +327,18 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <!-- <div class="col-md-12">
                                 <div class="icheck-material-green">
                                     <input type="checkbox" ng-true-value="1" ng-false-value="0" ng-checked="current_student.is_registed" ng-model="current_student.is_registed" id="green" />
                                     <label for="green">Học viên chính thức</label>
                                 </div>
-                            </div>
+                            </div> -->
 
 
 
                             <div class="col-md-12">
                                 <div class="form-group text-right">
+                                    <input type="button" class="btn btn-success" value="Chuyển thành học viên" ng-click="toRegister()">
                                     <input type="submit" class="btn btn-primary" value="Cập nhật" ng-click="changeNameGroup()">
                                 </div>
                             </div>
@@ -236,9 +358,9 @@
             <div class="container-tab">
                 <div class="row">
                     <div class="col-md-12">
-                        <form role="form" ng-submit="addStudent()" class="pull-right" style="max-width: 250px">
+                        <form role="form" ng-submit="addStudent()" style="max-width: 250px">
                             <div class="input-group other">
-                                <input type="text" style="height: 32px" ng-model="student.phone" class="form-control" placeholder="Nhập số điện thoại">
+                                <input type="text" style="height: 32px" onkeyup="this.value=this.value.replace(/[^\d]/,'').replace(/\D/g,'')" ng-model="student.phone" class="form-control" placeholder="Nhập số điện thoại">
                                 <div class="input-group-addon">
                                     <input type="submit" class="input-group-addon" value="Tạo">
                                 </div>
@@ -246,15 +368,81 @@
                         </form>
                     </div>
                 </div>
+                <div class="line" style="border: 1px dashed #cea9a9;margin: 10px 0;"></div>
+                <div class="form">
+                    <div class="form-group">
+                        <div class="flex flex-bt" style="display: flex;justify-content:space-between">
+                            <strong class="span">
+                                Ngày chăm sóc:
+                            </strong>
+                            <span style="color:#bf0000;margin-right: 5px;cursor: pointer" class="cursor" ng-click="setUnDate()" ng-if="filter.date">
+                                <i class="fa fa-window-close" aria-hidden="true"></i>
+                            </span>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <i class="fa fa-calendar"></i>
+                            </div>
+                            <input class="date text-center form-control" name="date_filter" ng-model="filter.date" class="">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <STRONG>
+                            Trạng thái chăm vừa qua:
+                        </STRONG>
+                        <select name="" class="form-control" id="" ng-model="filter.status_care">
+                            <option ng-repeat="(index,value) in list_key" value="{{value.id}}">{{value.name}}</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <STRONG>
+                            Lực chọn:
+                        </STRONG>
+                        <select name="" id="" class="form-control" ng-model="filter.option">
+                            <option value="1">
+                                Số lần chăm sóc
+                            </option>
+                            <option value="2">
+                                Ngày chăm sóc
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <STRONG>
+                            Sắp xếp:
+                        </STRONG>
+                        <select name="" id="" class="form-control" ng-model="filter.sort">
+                            <option value="1">
+                                Tăng dần
+                            </option>
+                            <option value="2">
+                                Giảm dần
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <div style="margin-top: 19px">
+
+                        </div>
+                        <div class="btn btn-primary" ng-click="getDataStudent(0)">
+                            Tải dữ liệu
+                        </div>
+                    </div>
+
+                </div>
 
                 <ul class="nav nav-tabs">
-                    <li ng-class="{'active':filter.is_registed==2}" class="cursor" ng-click="getDataStudent(2)"><a><i class="fa fa-list" aria-hidden="true"></i> Tất cả</a></li>
-                    <li ng-class="{'active':filter.is_registed==1}" class="cursor" ng-click="getDataStudent(1)"><a><i class="fa fa-address-card" aria-hidden="true"></i> Đã đăng ký</a></li>
+                    <!-- <li ng-class="{'active':filter.is_registed==2}" class="cursor" ng-click="getDataStudent(2)"><a><i class="fa fa-list" aria-hidden="true"></i> Tất cả</a></li>
+                    <li ng-class="{'active':filter.is_registed==1}" class="cursor" ng-click="getDataStudent(1)"><a><i class="fa fa-address-card" aria-hidden="true"></i> Đã đăng ký</a></li> -->
                     <li ng-class="{'active':filter.is_registed==0}" class="cursor" ng-click="getDataStudent(0)"><a><i class="fa fa-refresh" aria-hidden="true"></i> Chưa đăng ký</a></li>
-
-                    <li class="pull-right" style="max-width: 200px">
-
-
+                    <li class="pull-right" style="max-width: 250px">
+                        <div class="input-group">
+                            <input type="text" class="form-control " placeholder="Số điện thoại/tên" ng-model="filter.key" ng-change="getDataStudent(0)">
+                            <div class="input-group-addon">
+                                <i class="fa fa-search"></i>
+                            </div>
+                        </div>
                     </li>
                 </ul>
 
@@ -316,12 +504,6 @@
                                                                 Chăm sóc
                                                             </a>
                                                         </li>
-                                                        <!-- <li>
-                                                            <a href="staffs/submit_order/{{value.type}}/{{value.id}}">
-                                                            <i class="fa fa-history" aria-hidden="true"></i>
-                                                                Lịch sử chăm sóc
-                                                            </a>
-                                                        </li> -->
                                                     </ul>
                                                 </div>
                                             </div>
@@ -340,6 +522,36 @@
     </div>
 </div>
 <style>
+    .flex {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .flex-bt {
+        justify-content: space-between;
+    }
+
+    .content .form {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .content .form>div {
+        width: 250px;
+        margin-right: 15px;
+        margin-bottom: 10px
+    }
+
+    .calendar.left,
+    .calendar.right {
+        display: block !important;
+    }
+
+    .daterangepicker_start_input,
+    .daterangepicker_end_input {
+        display: none;
+    }
+
     #ui-datepicker-div {
         z-index: 999999 !important;
     }
@@ -406,6 +618,10 @@
         list-style-type: none;
         padding: 0;
         margin: 0;
+    }
+
+    .table {
+        margin-bottom: 30px;
     }
 
     #myUL li a {
@@ -498,7 +714,7 @@
 
 <script>
     angular.module('app', [])
-        .controller('date_off', function($scope, $http, $compile) {
+        .controller('date_off', function($scope, $http, $compile, $window) {
 
 
             var pi = $scope.pagingInfo = {
@@ -518,32 +734,64 @@
                 $scope.p1.itemsPerPage = 5;
                 $scope.p1.id = 1;
 
+                $scope.p2 = {};
+                $scope.p2 = angular.copy(pi);
+                $scope.p2.itemsPerPage = 5;
+                $scope.p2.id = 2;
+
                 $scope.p = {};
                 $scope.p = angular.copy(pi);
                 $scope.p.itemsPerPage = 20;
                 $scope.p.id = 0;
 
                 $scope.filter = {};
-                $scope.filter.is_registed = 2;
+                $scope.filter.is_registed = 0;
                 $scope.filter.limit = $scope.p.itemsPerPage;
                 $scope.filter.offset = $scope.p.offset;
+                //  $scope.filter.date = moment().format("MM/DD/YYYY") + ' - ' + moment().format("MM/DD/YYYY");
+                $scope.filter.option = '1';
+                $scope.filter.sort = '1';
 
                 $scope.filter1 = {};
                 $scope.filter1.limit = $scope.p1.itemsPerPage;
                 $scope.filter1.offset = $scope.p1.offset;
 
+                $scope.filter2 = {};
+                $scope.filter2.limit = $scope.p2.itemsPerPage;
+                $scope.filter2.offset = $scope.p2.offset;
+
                 $scope.care = {};
                 $scope.student = {};
+                $scope.dateInputInit();
+
+                $scope.genHtml('app_data', 'p2', '#p2')
                 $scope.genHtml('care_data', 'p1', '#p1')
                 $scope.genHtml('ajax_data', 'p', '#p')
                 $scope.getDataStudent($scope.filter.is_registed);
+                $scope.changeCare();
 
+            }
+
+            $scope.changeStatusApp = (item, status) => {
+                var data = {
+                    id: item.id,
+                    arrival_status: status
+                }
+                $http.post(base_url + 'admin/member/ajax_change_status_app', JSON.stringify(data)).then(r => {
+                    if (r && r.data.status == 1) {
+                        toastr["success"]("Thành công!");
+                        $scope.getApp($scope.current_student.id);
+                    } else toastr["error"]("Đã có lỗi xẩy ra!");
+                });
+            }
+
+            $scope.setUnDate = () => {
+                $scope.filter.date = undefined;
             }
 
             $scope.openInforModal = (item) => {
                 $scope.current_student = angular.copy(item);
                 $scope.current_student.is_registed = parseInt($scope.current_student.is_registed);
-                console.log(item);
 
                 $('#infor').modal({
                     backdrop: 'static',
@@ -557,7 +805,22 @@
 
                 $scope.list_key = [];
             }
-            $scope.clickKey = (name) => {
+
+            $scope.deleteCare = (item) => {
+                $http.post(base_url + 'admin/member/ajax_delete_student_care', JSON.stringify(item)).then(
+                    r => {
+                        if (r && r.data.status == 1) {
+                            toastr["success"]("Xóa thành công!");
+                            $scope.getStudentCare($scope.current_student.id);
+                            $scope.getApp($scope.current_student.id);
+                        } else if (r && r.data.status == 0) {
+                            toastr["error"]("Bạn không phải người tạo!");
+                        } else toastr["error"]("Đã có lỗi xẩy ra!");
+                    });
+            }
+
+            $scope.clickKey = (name, id) => {
+                $scope.care.id = id;
                 $scope.care.name_care = angular.copy(name);
                 $scope.list_key = [];
             }
@@ -573,6 +836,7 @@
                 $scope.current_student = angular.copy(item);
 
                 $scope.getStudentCare($scope.current_student.id);
+                $scope.getApp($scope.current_student.id);
                 $('#care').modal({
                     backdrop: 'static',
                     keyboard: false,
@@ -581,13 +845,26 @@
             }
 
             $scope.saveStudentCare = () => {
+                if (!$scope.care.name_care || $scope.care.name_care == "") {
+                    toastr["error"]("Không để trống tên tag!");
+                    return false;
+                }
+                console.log($scope.care.date, $scope.care.time);
+
+                if ($scope.care.name_care == 'Chốt lịch hẹn' && (!$scope.care.date || $scope.care.date == '' || !$scope.care.time || $scope.care.time == '')) {
+                    toastr["error"]("Nhập thời gian cho lịch hẹn!");
+                    return false;
+                }
+
                 $scope.care.student_id = $scope.current_student.id;
                 $http.post(base_url + 'admin/member/ajax_save_student_care', JSON.stringify($scope.care)).then(
                     r => {
                         if (r && r.data.status == 1) {
                             toastr["success"]("Tạo thành công!");
                             $scope.getStudentCare($scope.care.student_id);
-                            $scope.getDataStudent();
+
+                            $scope.getApp($scope.care.student_id)
+                            $scope.getDataStudent(0);
                             $scope.care = {};
                         } else toastr["error"]("Đã có lỗi xẩy ra!");
                     });
@@ -631,7 +908,7 @@
 
             $scope.getStudentCare = (id) => {
                 $scope.filter1.id = id;
-                $http.get(base_url + 'admin/member/ajax_get_student_care?filter=' + JSON.stringify($scope.filter1))
+                $http.get(base_url + 'admin/member/ajax_get_student_care/1?filter=' + JSON.stringify($scope.filter1))
                     .then(r => {
                         console.log(r);
 
@@ -644,11 +921,30 @@
                     });
             }
 
+            $scope.getApp = (id) => {
+                $scope.filter2.id = id;
+                $http.get(base_url + 'admin/member/ajax_get_student_care/2?filter=' + JSON.stringify($scope.filter1))
+                    .then(r => {
+                        console.log(r);
+
+                        if (r && r.data.status == 1) {
+                            $scope.app_data = r.data.data;
+                            $scope.p2.total = parseInt(r.data.count);
+                            $scope.p2.totalPage = Math.ceil(r.data.count / $scope.p2.itemsPerPage);
+                        } else toastr["error"]("Đã có lỗi xẩy ra!");
+                    });
+            }
+
+
             $scope.addStudent = () => {
+                if (!$scope.student.phone || $scope.student.phone == "") {
+                    toastr["error"]("Không để trống số điện thoại!");
+                    return false;
+                }
                 $http.post(base_url + 'admin/member/ajax_save_academy_student', JSON.stringify($scope.student))
                     .then(r => {
                         if (r && r.data.status == 1) {
-                            $scope.getDataStudent();
+                            $scope.getDataStudent(0);
                             $scope.student = {};
                             toastr["success"]("Tạo thành công!");
                         } else if (r && r.data.status == 0) {
@@ -658,18 +954,72 @@
             }
             $scope.saveStudent = () => {
                 $scope.student = $scope.current_student;
-                console.log($scope.student);
 
                 $scope.addStudent();
             }
 
+            $scope.toRegister = () => {
+                console.log($scope.current_student);
 
+                if (!$scope.current_student.name || $scope.current_student.name == '') {
+                    toastr["error"]("Thiếu tên!");
+                    return false;
+                }
+                if (!$scope.current_student.phone || $scope.current_student.phone == '') {
+                    toastr["error"]("Thiếu số điện thoại!");
+                    return false;
+                }
+                if (!$scope.current_student.date || $scope.current_student.date == '') {
+                    toastr["error"]("Thiếu ngày sinh!");
+                    return false;
+                }
+                if (!$scope.current_student.address || $scope.current_student.address == '') {
+                    toastr["error"]("Thiếu địa chỉ liên lạc!");
+                    return false;
+                }
+                if (!$scope.current_student.gender) {
+                    toastr["error"]("Thiếu giới tính!");
+                    return false;
+                }
+                if (!$scope.current_student.area) {
+                    toastr["error"]("Thiếu khu vực!");
+                    return false;
+                }
+                if (!$scope.current_student.identity_number || $scope.current_student.identity_number == '') {
+                    toastr["error"]("Thiếu số chứng minh nhân dân!");
+                    return false;
+                }
+                if (!$scope.current_student.id_date || $scope.current_student.id_date == '') {
+                    toastr["error"]("Thiếu ngày cấp!");
+                    return false;
+                }
+
+
+
+                $http.post(base_url + 'admin/member/ajax_register', JSON.stringify($scope.current_student))
+
+                    .then(r => {
+
+                        if (r && r.data.status == 1) {
+                            $scope.getDataStudent(0);
+
+                            $scope.student = {};
+                            toastr["success"]("Tạo thành công!");
+                            $('#infor').modal('hide');
+                            $window.open(base_url + 'admin/member/edit/' + r.data.data, '_blank');
+                        } else if (r && r.data.status == 0) {
+                            toastr["error"]("Số điện thoại đã tồn tại!");
+                        } else toastr["error"]("Đã có lỗi xẩy ra!");
+                    });
+            }
 
 
             $scope.getDataStudent = (is_registed) => {
                 $scope.filter.is_registed = is_registed;
                 $http.get(base_url + 'admin/member/ajax_get_academy_student?filter=' + JSON.stringify($scope
                     .filter)).then(r => {
+                    console.log(r);
+
                     if (r && r.data.status == 1) {
                         $scope.ajax_data = r.data.data;
                         $scope.p.total = parseInt(r.data.count);
@@ -716,10 +1066,14 @@
                     $scope.filter1.limit = pi.itemsPerPage;
                     $scope.filter1.offset = pi.offset;
                     $scope.getStudentCare($scope.current_student.id);
+                } else if (pi.id == 2) {
+                    $scope.filter2.limit = pi.itemsPerPage;
+                    $scope.filter2.offset = pi.offset;
+                    $scope.getApp(0);
                 } else {
                     $scope.filter.limit = pi.itemsPerPage;
                     $scope.filter.offset = pi.offset;
-                    $scope.getDataStudent();
+                    $scope.getDataStudent(0);
                 }
 
                 pi.to = pi.total < pi.itemsPerPage ? pi.total : pi.itemsPerPage

@@ -100,6 +100,7 @@ class Member extends Admin_Controller
 		$this->mViewData['details'] = $details;
 		$this->render('member/index');
 	}
+
 	function add()
 	{
 		$this->mTitle = "Thêm học viên";
@@ -424,33 +425,88 @@ class Member extends Admin_Controller
 	{
 		$filter = (object) json_decode($this->input->get('filter'));
 
+		if (isset($filter->date) && $filter->date != '') {
+			$date = explode('-', $filter->date);
+			$date_1 = explode('/', $date[0]);
+			$date_2 = explode('/', $date[1]);
+			$start_date = trim($date_1[2]) . '-' . trim($date_1[0]) . '-' . trim($date_1[1]);
+			if ($date[0] == $date[1]) {
+				$end_date = date('Y-m-d', strtotime('+1 day', strtotime($start_date)));
+			} else {
+				$end_date = trim($date_2[2]) . '-' . trim($date_2[0]) . '-' . trim($date_2[1]);
+			}
+		}
+
+
 		$this->db->select('ast.*,count(asc.id) as total, DATE_FORMAT(max(asc.created),"%d-%m-%Y %h:%i") as recent')
 			->from('academy_student as ast')
 			->join('academy_student_care as asc', 'ast.id=asc.student_id', 'left');
+
 		if (isset($filter->is_registed) && $filter->is_registed == 0) {
 			$this->db->where('ast.is_registed', 0);
 		} elseif (isset($filter->is_registed) && $filter->is_registed == 1) {
 			$this->db->where('ast.is_registed', 1);
 		}
+
+		if (isset($filter->key) && $filter->key != '') {
+			$this->db->where('(ast.phone like "%' . $filter->key . '%" or ast.name like "%' . $filter->key . '%")');
+		}
+
+		if (isset($filter->date) && $filter->date != '') {
+			$this->db->where('asc.created >=', $start_date . ' 00:00:00');
+			$this->db->where('asc.created <=', $end_date . ' 23:59:59');
+		}
+		// if (isset($filter->status_care)) {
+
+		// }
+
+
+
 
 		$this->db->group_by('ast.id');
 
 		if (!empty($filter->limit)) $this->db->limit($filter->limit, $filter->offset);
-		$this->db->order_by('ast.id', 'desc');
+
+		$sort = '';
+		if (isset($filter->option) && $filter->option == 1) {
+			$sort = 'total';
+		} else {
+			$sort = 'asc.created';
+		}
+		if (isset($filter->sort) && $filter->sort == 1) {
+			$sort = $sort . ' asc';
+		} else {
+			$sort = $sort . ' desc';
+		}
+		if (isset($filter->sort) && isset($filter->option)) {
+			$this->db->order_by($sort);
+		}
 		$rs = $this->db->get()->result();
-		$qr = $this->db->last_query();
 
 		$this->db->select('count(*) as total')
-			->from('academy_student as ast');
+			->from('academy_student as ast')
+			->join('academy_student_care as asc', 'ast.id=asc.student_id', 'left');
+
 		if (isset($filter->is_registed) && $filter->is_registed == 0) {
 			$this->db->where('ast.is_registed', 0);
 		} elseif (isset($filter->is_registed) && $filter->is_registed == 1) {
 			$this->db->where('ast.is_registed', 1);
 		}
+		if (isset($filter->date) && $filter->date != '') {
+			$this->db->where('asc.created >=', $start_date . ' 00:00:00');
+			$this->db->where('asc.created <=', $end_date . ' 23:59:59');
+		}
 
-		$count = $this->db->get()->row();
+		if (isset($filter->key) && $filter->key != '') {
+			$this->db->where('(ast.phone like "%' . $filter->key . '%" or ast.name like "%' . $filter->key . '%")');
+		}
+		$this->db->group_by('ast.id');
 
-		echo json_encode(array('status' => 1, 'count' => $count->total, 'data' => $rs, $qr));
+		$count = $this->db->get()->result();
+		$qr = $this->db->last_query();
+
+
+		echo json_encode(array('status' => 1, 'count' => count($count), 'data' => $rs, $qr));
 	}
 
 
@@ -465,6 +521,9 @@ class Member extends Admin_Controller
 			'address' 			 => isset($_POST->address) ? $_POST->address : null,
 			'identity_number'    => isset($_POST->identity_number) ? $_POST->identity_number : null,
 			'is_registed'        => isset($_POST->is_registed) ? $_POST->is_registed : 0,
+			'id_date'            => isset($_POST->id_date) ? $_POST->id_date : null,
+			'gender'             => isset($_POST->gender) ? $_POST->gender : 0,
+			'area'              => isset($_POST->area) ? $_POST->area : null,
 		);
 
 		if (isset($_POST->id)) {
@@ -486,17 +545,26 @@ class Member extends Admin_Controller
 		echo json_encode(array('status' => 1, 'data' => $rs, $this->db->last_query()));
 	}
 
-	public function ajax_get_student_care()
+	public function ajax_get_student_care($type)
 	{
 		$filter = (object) json_decode($this->input->get('filter'));
 
-		$this->db->select('DATE_FORMAT(asc.created,"%d-%m-%Y %h:%i") as created,ast.name as name_care,asc.import_id')
+		$this->db->select('asc.id,DATE_FORMAT(asc.created,"%d-%m-%Y %h:%i") as created,ast.name as name_care,asc.import_id,DATE_FORMAT(asc.arrival_time,"%d-%m-%Y %h:%i") as arrival_time,arrival_status')
 			->from('academy_student_care as  asc')
 			->join('academy_care_tag as ast', 'asc.care_id=ast.id')
 			->where('asc.student_id', $filter->id);
+		if ($type == 1) {
+			$this->db->where('ast.id!=', 1);
+		} else {
+			$this->db->where('ast.id=', 1);
+		}
 
 		if (!empty($filter->limit)) $this->db->limit($filter->limit, $filter->offset);
-		$this->db->order_by('asc.id', 'desc');
+		if ($type == 1) {
+			$this->db->order_by('asc.id', 'desc');
+		} else {
+			$this->db->order_by('asc.arrival_time', 'asc');
+		}
 		$rs = $this->db->get()->result();
 		$qr = $this->db->last_query();
 		foreach ($rs as $key => $value) {
@@ -504,11 +572,16 @@ class Member extends Admin_Controller
 
 			$value->import_name = $user->last_name . ' ' . $user->first_name;
 		}
-		$count = $this->db->select('count(*) as total')
+		$this->db->select('count(*) as total')
 			->from('academy_student_care as  asc')
 			->join('academy_care_tag as ast', 'asc.care_id=ast.id')
-			->where('asc.student_id', $filter->id)->get()->row();
-
+			->where('asc.student_id', $filter->id);
+		if ($type == 1) {
+			$this->db->where('ast.id!=', 1);
+		} else {
+			$this->db->where('ast.id=', 1);
+		}
+		$count = $this->db->get()->row();
 		echo json_encode(array('status' => 1, 'count' => $count->total, 'data' => $rs, $qr));
 	}
 
@@ -553,10 +626,83 @@ class Member extends Admin_Controller
 			'created'    => date('Y-m-d H:i:s')
 		);
 
-
+		if ($id_care == 1) {
+			$data['arrival_time'] = $_POST->date . ' ' . $_POST->time . ':00';
+		}
 		$this->db->set($data);
 		$rs = $this->db->insert('academy_student_care');
 
+		echo json_encode(array('status' => 1, 'data' => $rs, $this->db->last_query()));
+	}
+
+	public function ajax_register()
+	{
+		$_POST =  json_decode(file_get_contents('php://input'), true);
+
+		$check = $this->db->select('count(*) as total')->from('member')
+			->where('phone', $_POST['phone'])->get()->row();
+		if (isset($check) && $check->total > 0) {
+			echo json_encode(array('status' => 0));
+			die;
+		}
+		$data = array();
+		$data['name'] = $_POST['name'];
+		$data['phone'] = $_POST['phone'];
+		$data['birthday'] = $_POST['date'];
+		$data['gender'] = $_POST['gender'];
+		$data['address_contact'] = $_POST['address'];
+		$data['import_id'] = get_current_user_id();
+		$data['id_card'] = $_POST['identity_number'];
+		$data['id_date'] = $_POST['id_date'];
+		$data['area'] = $_POST['area'];
+
+		$data['password'] = $this->ion_auth->hash_password($this->input->post('phone'));
+
+		$data['created'] = date('Y-m-d');
+		$in = $this->member->insert($data);
+		$insert_id = $this->db->insert_id();
+		if ($in) {
+			$update = array();
+			$update['name'] = $_POST['name'];
+			$update['phone'] = $_POST['phone'];
+			$update['date'] = $_POST['date'];
+			$update['gender'] = $_POST['gender'];
+			$update['address'] = $_POST['address'];
+			$update['identity_number'] = $_POST['identity_number'];
+			$update['id_date'] = $_POST['id_date'];
+			$update['area'] = $_POST['area'];
+			$update['is_registed'] = 1;
+
+			$this->db->set($update);
+			$this->db->where('id', 	$_POST['id']);
+			$this->db->update('academy_student');
+
+			$this->member->update_by(array('id' => $insert_id), array('code' => $_POST['area'] . $insert_id));
+		}
+
+		echo json_encode(array('status' => 1, 'data' => $insert_id, $this->db->last_query()));
+	}
+	public function ajax_delete_student_care()
+	{
+		$_POST = (object)  json_decode(file_get_contents('php://input'), true);
+
+		$user = get_user();
+		if ($_POST->import_id != $user->id) {
+			echo json_encode(array('status' => 0));
+			die;
+		}
+
+		$this->db->where('id', $_POST->id);
+		$rs = $this->db->delete('academy_student_care');
+
+		echo json_encode(array('status' => 1, 'data' => $rs, $this->db->last_query()));
+	}
+
+	public function ajax_change_status_app()
+	{
+		$_POST =  json_decode(file_get_contents('php://input'), true);
+		$this->db->where('id', $_POST['id']);
+		$rs = $this->db->update('academy_student_care', $_POST);
 		echo json_encode(array('status' => 1, 'data' => $rs, $this->db->last_query()));
 	}
 }

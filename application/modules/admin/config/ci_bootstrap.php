@@ -81,6 +81,7 @@ $config['ci_bootstrap'] = array(
 			'children'  => array(
 				'Danh sách'		=> 'member/lists',
 				'Doanh số'		=> 'member',
+				'Chăm sóc SĐT'  => 'member/academy_student_care'
 			)
 		),
 		'course' => array(
